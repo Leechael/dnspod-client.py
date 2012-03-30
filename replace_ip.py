@@ -70,10 +70,6 @@ def query (path, params = {}, decode=True):
       'format': 'json',
     }
   config = load_config()
-  if not config:
-    raise InvalidConfigError()
-  if not 'common' in config and not 'login_email' in config['common'] and not 'login_password' in config['common']:
-    raise InvalidConfigError()
   defaults.update(config['common'])
   params.update(defaults)
 
@@ -109,7 +105,11 @@ def load_config ():
         returns[section] = {}
         for (k, v) in config.items(section):
           returns[section][k] = v
+      if not 'common' in returns or not 'login_email' in returns['common'] or not 'login_password' in returns['common']:
+        raise InvalidConfigError('One of following not providing in config: section `common`,  fields `login_email` or `login_password`.')
       globals()['CONFIG'] = returns
+  if not returns:
+    raise InvalidConfigError()
   return globals()['CONFIG']
 
 
