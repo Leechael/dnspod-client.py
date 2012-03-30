@@ -7,8 +7,8 @@ Make sure you had been create config file before running this script.
 Config file should locate in `~/.dnspodrc/config`, in format like:
 """
 [common]
-login_email = xxx
-login_password = xxx
+login_email = your_name@domain.com
+login_password = password_not_using_to_login_csdn
 """
 ------------------------------------------------------------------------------
 '''
@@ -21,10 +21,22 @@ import requests
 from simplejson import loads as json_decode
 
 
+'''
+Errors
+'''
 class InvalidConfigError (BaseException):
   pass
 
+class RequestError (BaseException):
+  pass
 
+class ServiceError (BaseException):
+  pass
+
+
+'''
+Functions
+'''
 # FIXME caching, caching!
 def get_all_records ():
   domains = query('Domain.List', {'type': 'all'})['domains']
@@ -43,16 +55,14 @@ def get_all_records ():
 
 
 def update_record_ip (record, ip):
-  resp = query('Record.Modify', {
+  return query('Record.Modify', {
       'domain_id': record['domain_id'],
       'record_id': record['id'],
       'sub_domain': record['name'],
       'record_type': record['type'],
       'record_line': record['line'],
       'value': ip,
-    }, False)
-  msg = json_decode(resp.content)
-  return msg
+    })
 
 
 def query (path, params = {}, decode=True):
@@ -68,7 +78,7 @@ def query (path, params = {}, decode=True):
   params.update(defaults)
 
   headers = {
-      'User-Agent': 'Weiwo SABot/1.0 (admin@meeit.com)',
+      'User-Agent': 'Weiwo SABot/1.0 (yanleech@gmail.com)',
     }
 
   domain = 'https://dnsapi.cn/'
@@ -78,36 +88,46 @@ def query (path, params = {}, decode=True):
   if not decode:
     return resp
   if resp.status_code != 200:
-    # FIXME Error handling
-    return False
+    raise ServiceError("Got response status code `%s` but expected 200." % (resp.status_code, ))
   msg = json_decode(resp.content)
   if int(msg['status']['code']) != 1:
-    # FIXME Error handling
-    return False
+    raise RequestError("You just doing something DNSPod NOT allow: [%s] %s" % (msg['status']['code'], msg['status']['message']))
   return msg
 
 
+
+CONFIG=None
+
 def load_config ():
-  f = path.expanduser('~/.dnspodrc/config')
-  returns = {}
-  if path.exists(f):
-    config = ConfigParser()
-    config.read(f)
-    for section in config.sections():
-      returns[section] = {}
-      for (k, v) in config.items(section):
-        returns[section][k] = v
-  return returns
+  if not globals()['CONFIG']:
+    f = path.expanduser('~/.dnspodrc/config')
+    returns = {}
+    if path.exists(f):
+      config = ConfigParser()
+      config.read(f)
+      for section in config.sections():
+        returns[section] = {}
+        for (k, v) in config.items(section):
+          returns[section][k] = v
+      globals()['CONFIG'] = returns
+  return globals()['CONFIG']
 
 
+'''
+Worker.
+'''
 if __name__ == '__main__':
   import sys
   if len(sys.argv) < 3:
     print "Usage: %s [search_ip] [replace_ip]" % (sys.argv[0])
     sys.exit(1)
-  print __doc__
+
   search_ip = sys.argv[1]
   replace_ip = sys.argv[2]
+
+  if not load_config():
+    print __doc__
+    sys.exit(1)
 
   domains = get_all_records()
   for (domain_id, domain) in domains.items():
