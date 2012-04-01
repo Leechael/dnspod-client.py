@@ -108,8 +108,6 @@ def load_config ():
       if not 'common' in returns or not 'login_email' in returns['common'] or not 'login_password' in returns['common']:
         raise InvalidConfigError('One of following not providing in config: section `common`,  fields `login_email` or `login_password`.')
       globals()['CONFIG'] = returns
-  if not returns:
-    raise InvalidConfigError()
   return globals()['CONFIG']
 
 
