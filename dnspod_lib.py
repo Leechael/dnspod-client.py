@@ -3,6 +3,7 @@
 
 from os import path
 from ConfigParser import ConfigParser
+from time import sleep
 
 import requests
 from simplejson import loads as json_decode
@@ -71,3 +72,44 @@ def query (path, params = {}, decode=True):
   if int(msg['status']['code']) != 1:
     raise RequestError("You just doing something DNSPod NOT allow: [%s] %s" % (msg['status']['code'], msg['status']['message']))
   return msg
+
+
+'''
+Functions
+'''
+# FIXME caching, caching!
+
+def get_all_records ():
+  domains = query('Domain.List', {'type': 'all'})['domains']
+  groups = {}
+  for domain in domains:
+    did = domain['id']
+    groups[did] = domain
+
+    groups[did]['records'] = {};
+    records = query('Record.List', {'domain_id': did})['records']
+    for record in records:
+      groups[did]['records'][record['id']] = record
+      groups[did]['records'][record['id']]['domain_id'] = did
+    sleep(0.3)
+  return groups
+
+
+def update_record_ip (record, ip):
+  return query('Record.Modify', {
+      'domain_id': record['domain_id'],
+      'record_id': record['id'],
+      'sub_domain': record['name'],
+      'record_type': record['type'],
+      'record_line': record['line'],
+      'value': ip,
+    })
+
+
+def get_record (search):
+  for (domain_id, domain) in get_all_records().items():
+    for (record_id, record) in domain['records'].items():
+      pattern = '%s.%s' % (record['name'], domain['name'])
+      if pattern == search:
+        return record
+  return None

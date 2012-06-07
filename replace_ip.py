@@ -13,39 +13,7 @@ login_password = password_not_using_to_login_csdn
 ------------------------------------------------------------------------------
 '''
 
-from time import sleep
 from dnspod_lib import *
-
-
-'''
-Functions
-'''
-# FIXME caching, caching!
-def get_all_records ():
-  domains = query('Domain.List', {'type': 'all'})['domains']
-  groups = {}
-  for domain in domains:
-    did = domain['id']
-    groups[did] = domain
-
-    groups[did]['records'] = {};
-    records = query('Record.List', {'domain_id': did})['records']
-    for record in records:
-      groups[did]['records'][record['id']] = record
-      groups[did]['records'][record['id']]['domain_id'] = did
-    sleep(0.3)
-  return groups
-
-
-def update_record_ip (record, ip):
-  return query('Record.Modify', {
-      'domain_id': record['domain_id'],
-      'record_id': record['id'],
-      'sub_domain': record['name'],
-      'record_type': record['type'],
-      'record_line': record['line'],
-      'value': ip,
-    })
 
 
 '''
