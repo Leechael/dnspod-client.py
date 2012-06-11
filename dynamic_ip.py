@@ -80,7 +80,7 @@ if __name__ == '__main__':
 
   pattern = argv[1]
   logging.basicConfig(format='[%(asctime)-15s] [%(name)s] %(message)s',
-      filename='update.log', level=logging.DEBUG)
+      filename='/var/log/dnspod-client.log', level=logging.DEBUG)
   logger = logging.getLogger('dynamic_ip')
 
   ip = get_ip()
