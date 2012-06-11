@@ -100,4 +100,4 @@ if __name__ == '__main__':
 
   update_record_ip(record, ip)
   write_cache(pattern, ip)
-  logging.info("Updated: %s now point to IP %s" % (pattern, ip))
+  logger.info("Updated: %s now point to IP %s" % (pattern, ip))
