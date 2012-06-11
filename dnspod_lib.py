@@ -96,6 +96,8 @@ def get_all_records ():
 
 
 def update_record_ip (record, ip):
+  if record['value'] == ip:
+    return True
   return query('Record.Modify', {
       'domain_id': record['domain_id'],
       'record_id': record['id'],
